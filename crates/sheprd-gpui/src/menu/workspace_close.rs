@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 use gpui::App;
 use sheprd_client::protocol::{ClientShellSnapshot, ClientShellWorktree};
 
-use super::workspace::WorkspaceTarget;
+use super::workspace::{Source, WorkspaceTarget};
 use crate::i18n::fl;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -104,6 +104,35 @@ impl CloseCheck {
                 )
             })
             .collect();
+        Self::spawn(checkouts, inputs, local, cx)
+    }
+
+    /// App-kept folders belong to the selected host, independently of any
+    /// Herdr 1 connection. The worker verifies their repository and branch.
+    pub fn start_kept(target: &WorkspaceTarget, local: bool, cx: &App) -> Self {
+        let input = match &target.source {
+            Source::Directory(cwd) => target
+                .branch
+                .clone()
+                .ok_or_else(|| sheprd_github::pull_request::Error::Branch.into())
+                .map(|branch| crate::pull_request::Input {
+                    checkout: Some(cwd.clone()),
+                    // A directory is not a Git common-directory key. Without
+                    // metadata, local_checkout resolves it from the folder.
+                    repo_key: target.worktree.as_ref().map(|tree| tree.key.clone()),
+                    branch,
+                }),
+            _ => Err(sheprd_github::pull_request::Error::Metadata.into()),
+        };
+        Self::spawn(Vec::new(), vec![input], local, cx)
+    }
+
+    fn spawn(
+        checkouts: Vec<Checkout>,
+        inputs: Vec<sheprd_github::Result<crate::pull_request::Input>>,
+        local: bool,
+        cx: &App,
+    ) -> Self {
         let mut report = Report {
             unknown: checkouts.len() > 128,
             ..Report::default()

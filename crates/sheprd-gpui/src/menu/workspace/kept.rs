@@ -163,7 +163,51 @@ impl SheprdWindow {
                 }
                 self.rename_kept_workspace(&id, &text, cx);
             }
-            WorkspaceAction::Close => self.close_kept_workspace(&id, window, cx),
+            WorkspaceAction::Close => {
+                // All submissions, including Enter and automatic close, must
+                // still address the checked workspace on the same host.
+                let current = (|| {
+                    if !self.menu_target_current() {
+                        return Err(crate::Error::StaleConnection);
+                    }
+                    let sessions = self.sessions(self.selected_endpoint);
+                    let workspace = sessions
+                        .core
+                        .as_ref()
+                        .and_then(|core| core.workspace(&id))
+                        .ok_or(crate::Error::StaleWorkspace)?;
+                    let target = self
+                        .menu
+                        .target
+                        .as_ref()
+                        .ok_or(crate::Error::StaleWorkspace)?;
+                    let current = WorkspaceTarget::kept(workspace);
+                    if target.source != current.source
+                        || target.worktree != current.worktree
+                        || target.branch != current.branch
+                    {
+                        return Err(crate::Error::WorkspaceCheckoutChanged);
+                    }
+                    Ok(())
+                })();
+                if let Err(error) = current {
+                    self.menu.error = Some(error.localize());
+                    cx.notify();
+                    return;
+                }
+                if self
+                    .menu
+                    .input
+                    .as_ref()
+                    .is_some_and(|input| input.marked.is_some())
+                    || !self.menu.close_check.as_ref().is_some_and(|check| {
+                        check.allows(&text, self.config.confirm_close_workspace)
+                    })
+                {
+                    return;
+                }
+                self.close_kept_workspace(&id, window, cx);
+            }
             WorkspaceAction::NewWorktree => {
                 let ask = self
                     .menu

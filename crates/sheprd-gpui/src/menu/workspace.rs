@@ -860,16 +860,24 @@ impl SheprdWindow {
             cx.notify();
             return;
         }
-        if action == WorkspaceAction::Close
-            && target.keeper == sheprd_session::Keeper::Herdr1
-            && let Some(snapshot) = &self.live.snapshot
-        {
-            self.menu.close_check = Some(super::workspace_close::CloseCheck::start(
-                snapshot,
-                target,
-                self.selected_endpoint == 0 && self.live.local_daemon_peer,
-                cx,
-            ));
+        if action == WorkspaceAction::Close {
+            use super::workspace_close::CloseCheck;
+            self.menu.close_check = if target.keeper == sheprd_session::Keeper::App {
+                Some(CloseCheck::start_kept(
+                    target,
+                    !self.selected_is_remote(),
+                    cx,
+                ))
+            } else {
+                self.live.snapshot.as_ref().map(|snapshot| {
+                    CloseCheck::start(
+                        snapshot,
+                        target,
+                        self.selected_endpoint == 0 && self.live.local_daemon_peer,
+                        cx,
+                    )
+                })
+            };
         }
         if action == WorkspaceAction::DeleteWorktree && target.keeper == sheprd_session::Keeper::App
         {

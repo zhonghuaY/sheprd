@@ -88,10 +88,7 @@ impl SheprdWindow {
                         && !picker.filtered.is_empty()
                         && !picker.search.read(cx).is_composing()
                 }))
-            // Only a Herdr 1 workspace's close waits on its Git check; a kept
-            // workspace closes through the app and never starts one.
             && (action != WorkspaceAction::Close
-                || target.keeper != sheprd_session::Keeper::Herdr1
                 || self.menu.close_check.as_ref().is_some_and(|check| {
                     check.allows(
                         self.menu
@@ -330,7 +327,7 @@ impl SheprdWindow {
                 }))
                 .children(deletion.and_then(|deletion| self.archive_note(target, deletion, cx))),
         };
-        if action == WorkspaceAction::Close && target.keeper == sheprd_session::Keeper::Herdr1 {
+        if action == WorkspaceAction::Close {
             body = body.child(
                 div()
                     .debug_selector(|| "close-git-status".into())
