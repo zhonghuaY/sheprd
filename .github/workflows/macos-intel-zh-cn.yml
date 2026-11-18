@@ -35,7 +35,7 @@ jobs:
           bash scripts/release/build-nearby.sh "$TARGET"
           python3 scripts/release/fetch-herdr-core.py "$TARGET" "target/$TARGET/release"
       - name: Install the notice generator
-        run: cargo install cargo-about --version '=0.9.2' --locked
+        run: cargo install cargo-about --version '=0.9.2' --locked --features cli
       - name: Assemble and package the app
         run: |
           bin="target/$TARGET/release"

@@ -347,7 +347,7 @@ class ReleaseTests(unittest.TestCase):
                         success=False)
         result = self.run_script("package-macos.sh", "20260920.3", "--x86_64", intel, self.work, self.notices)
         app = self.work / "Sheprd.app"
-        self.assertEqual(result.stdout.strip(), str(app.resolve()))
+        self.assertEqual(Path(result.stdout.strip()).resolve(), app.resolve())
         macos = app / "Contents/MacOS"
         self.assertEqual((macos / "sheprd").read_bytes(), intel.read_bytes())
         self.assertEqual((macos / "herdr-core").read_bytes(), (intel.parent / "herdr-core").read_bytes())
