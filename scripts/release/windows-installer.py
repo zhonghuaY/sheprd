@@ -57,6 +57,10 @@ INNO_VERSION = "6.7.3"
 INNO_URL = ("https://github.com/jrsoftware/issrc/releases/download/"
             f"is-{INNO_VERSION.replace('.', '_')}/innosetup-{INNO_VERSION}.exe")
 INNO_SHA256 = "9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732"
+# Inno Setup distributes this separately from the installed standard languages.
+INNO_ZH_CN_URL = ("https://raw.githubusercontent.com/jrsoftware/issrc/"
+                  "4adf37ed7f3fd2bd11c6836ba056e3de170fbabf/Files/Languages/Unofficial/ChineseSimplified.isl")
+INNO_ZH_CN_SHA256 = "7d544b9bb1d142cfa11f2e5d3cc8abe2e55f8e066c5124e3772675aa236e1278"
 
 
 def packaged_executables():
@@ -80,6 +84,12 @@ def install_iscc(destination):
     iscc = destination / "ISCC.exe"
     if not iscc.is_file():
         raise ValueError(f"Inno Setup did not install {iscc}")
+    with urllib.request.urlopen(INNO_ZH_CN_URL, timeout=120) as response:
+        chinese = response.read()
+    actual = hashlib.sha256(chinese).hexdigest()
+    if actual != INNO_ZH_CN_SHA256:
+        raise ValueError(f"Inno Setup Simplified Chinese translation digest mismatch: {actual}")
+    (destination / "Languages" / "ChineseSimplified.isl").write_bytes(chinese)
     return iscc
 
 

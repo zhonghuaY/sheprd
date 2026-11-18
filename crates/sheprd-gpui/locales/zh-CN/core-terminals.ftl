@@ -1,0 +1,32 @@
+# Herdr 2 terminals and their installation on devices.
+
+core-terminals-open-workspace = 请先打开一个工作区
+core-terminals-workspaces-need-core = 此主机未安装 herdr-core，因此没有 Herdr 2 工作区。请在主机菜单中选择“安装 Herdr 2”进行安装
+core-terminals-host-without-core = 此主机未安装 herdr-core，因此此标签页在该主机的 Herdr 中运行。请在主机菜单中选择“安装 Herdr 2”进行安装
+core-terminals-too-many-tabs = 打开的标签页过多
+core-terminals-this-computer = 此智能体在本机运行；请切换到本机后打开智能体
+core-terminals-connecting = 正在连接到 herdr-core…
+core-terminals-unavailable = herdr-core 不可用：{ $reason }
+core-terminals-start-failed = 无法启动终端：{ $reason }
+core-terminals-exited = 已退出，退出代码为 { $code }
+core-terminals-ended = 已结束
+core-terminals-reconnecting = 正在重新连接…
+core-terminals-input-dropped = 未连接到 herdr-core：输入未发送
+core-terminals-pane-own-tab = 此标签页已满时，另一个窗口拆分了它，因此新窗格在单独的标签页中打开
+core-terminals-state-blocked = 受阻
+core-terminals-state-done = 已完成
+core-terminals-state-idle = 空闲
+core-terminals-state-working = 工作中
+core-terminals-mirror-needs-pane = 请先点击要镜像的 Herdr 2 窗格
+core-terminals-menu-mirror = 在新标签页中镜像
+core-terminals-mirror-only-watches = 镜像仅供查看：请在可以输入的窗格中重命名或移动
+core-terminals-nowhere-to-move = 没有其他标签页或工作区可供移动
+core-terminals-watching = 正在查看
+core-terminals-edit-failed = 无法在编辑器中打开历史记录
+core-terminals-edit-remote = 只能编辑本机窗格的滚动历史
+core-terminals-install-started = 正在 { $device } 上安装 Herdr 2…
+core-terminals-install-installed = 已在 { $device } 上安装 Herdr 2（herdr-core { $version }）
+core-terminals-install-present = { $device } 已安装 Herdr 2
+core-terminals-install-running = 正在 { $device } 上安装 Herdr 2
+core-terminals-install-failed = 无法在 { $device } 上安装 Herdr 2：{ $reason }
+core-terminals-install-local = 本机运行的是 Sheprd 随附的 herdr-core

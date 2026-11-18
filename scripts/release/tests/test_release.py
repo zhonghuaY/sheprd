@@ -319,7 +319,7 @@ class ReleaseTests(unittest.TestCase):
             "Contents/MacOS/herdr-acp", "Contents/MacOS/herdr-remote-control",
             "Contents/MacOS/herdr-automate", "Contents/MacOS/herdr-nearby",
             "Contents/Info.plist", "Contents/Resources/Sheprd.icns",
-            "Contents/Resources/Assets.car",
+            "Contents/Resources/Assets.car", "Contents/Resources/zh-CN.lproj/InfoPlist.strings",
             "Contents/Resources/LICENSE-APACHE", "Contents/Resources/NOTICE.md",
             "Contents/Resources/LICENSE", "Contents/Resources/NOTICE", "Contents/Resources/LICENSE-octicons",
             "Contents/Resources/THIRD-PARTY-NOTICES.txt",
@@ -339,6 +339,18 @@ class ReleaseTests(unittest.TestCase):
         for source in ("LICENSE", "NOTICE", "assets/icons/LICENSE-octicons", "crates/sheprd-protocol/NOTICE.md", "crates/sheprd-gpui/SOUND-NOTICE.md"):
             self.assertEqual((app / "Contents/Resources" / Path(source).name).read_bytes(), (ROOT / source).read_bytes())
         self.run_script("package-macos.sh", "20260920.3", arm, intel, self.work, self.notices, success=False)
+
+    def test_intel_only_assembly_copies_the_intel_executables(self):
+        self.mock_tools()
+        arm, intel = self.macos_builds()
+        self.run_script("package-macos.sh", "20260920.3", "--x86_64", arm, self.work, self.notices,
+                        success=False)
+        result = self.run_script("package-macos.sh", "20260920.3", "--x86_64", intel, self.work, self.notices)
+        app = self.work / "Sheprd.app"
+        self.assertEqual(result.stdout.strip(), str(app.resolve()))
+        macos = app / "Contents/MacOS"
+        self.assertEqual((macos / "sheprd").read_bytes(), intel.read_bytes())
+        self.assertEqual((macos / "herdr-core").read_bytes(), (intel.parent / "herdr-core").read_bytes())
 
     def test_assembly_requires_each_companion_beside_each_binary(self):
         self.mock_tools()

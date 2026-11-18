@@ -130,7 +130,7 @@ class InstallerTests(unittest.TestCase):
                          [f"installer/{path.name}" for path in files])
         for path in files:
             with self.subTest(path.name):
-                defined = set(re.findall(r"^(\w+)=", path.read_text(), re.MULTILINE))
+                defined = set(re.findall(r"^(\w+)=", path.read_text(encoding="utf-8-sig"), re.MULTILINE))
                 self.assertEqual(defined, used)
 
     def test_the_inno_setup_pin_is_one_exact_release(self):

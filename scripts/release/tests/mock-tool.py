@@ -39,6 +39,8 @@ elif tool == "base64":
 elif tool == "plutil" and args[0] == "-extract":
     print({"LSMinimumSystemVersion": "14.2", "CFBundleExecutable": "sheprd",
            "CFBundleIdentifier": "so.pen.herdr-gpui"}.get(args[1], "20260920.3"))
+elif tool == "plutil" and args[0] == "-lint":
+    print(f"{args[-1]}: OK")
 elif tool == "lipo":
     if args[0] == "-archs":
         # A fixture is named for its architecture, or sits in a folder that is.

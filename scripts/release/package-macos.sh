@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 source "$(dirname -- "$0")/common.sh"
-[[ $# == 5 ]] || fail 'Usage: bash package-macos.sh VERSION ARM64_BINARY X86_64_BINARY OUTPUT_DIR THIRD_PARTY_NOTICES'
+[[ $# == 5 ]] || fail 'Usage: bash package-macos.sh VERSION {ARM64_BINARY|--x86_64} X86_64_BINARY OUTPUT_DIR THIRD_PARTY_NOTICES'
 version_check "$1"
 [[ $(uname -s) == Darwin ]] || fail 'macOS required'
-[[ -f $2 && -f $3 && -d $4 ]] || fail 'Two binary files and an existing output directory required'
+binaries=("$3")
+arches=(x86_64)
+if [[ $2 != --x86_64 ]]; then
+    binaries=("$2" "$3")
+    arches=(arm64 x86_64)
+fi
+[[ -d $4 ]] || fail 'Existing output directory required'
 [[ -f $5 && -s $5 ]] || fail 'Nonempty third-party notices file required'
 # The app starts chats with the sheprd-acp beside its executable, runs the
 # sheprd-remote-control beside it as a user service, runs automations in the
@@ -13,34 +19,46 @@ version_check "$1"
 # herdr-core there; each build leaves all five beside its sheprd
 # (herdr-core fetched pinned).
 companions=(sheprd-acp sheprd-remote-control sheprd-automate sheprd-nearby herdr-core)
-for companion in "${companions[@]}"; do
-    [[ -f $(dirname -- "$2")/$companion && -f $(dirname -- "$3")/$companion ]] || fail "A $companion beside each binary required"
+for index in "${!binaries[@]}"; do
+    binary=${binaries[index]}
+    arch=${arches[index]}
+    [[ -f $binary ]] || fail "Binary file required: $binary"
+    [[ $(lipo -archs "$binary") == "$arch" ]] || fail "$binary must be $arch only"
+    for companion in "${companions[@]}"; do
+        helper=$(dirname -- "$binary")/$companion
+        [[ -f $helper ]] || fail "A $companion beside each binary required"
+        [[ $(lipo -archs "$helper") == "$arch" ]] || fail "$helper must be $arch only"
+    done
 done
 out=$(cd -- "$4" && pwd)/Sheprd.app
 new_output "$out"
-icons=$(python3 "$release_root/scripts/release/build-icon.py" macos "$2" "$3")
+icons=$(python3 "$release_root/scripts/release/build-icon.py" macos "${binaries[@]}")
 icns=${icons%$'\n'*}
 catalog=${icons##*$'\n'}
 [[ -f $icns && -f $catalog ]] || fail 'Could not select the macOS icons'
-[[ $(lipo -archs "$2") == arm64 ]] || fail 'First binary must be arm64 only'
-[[ $(lipo -archs "$3") == x86_64 ]] || fail 'Second binary must be x86_64 only'
-for companion in "${companions[@]}"; do
-    [[ $(lipo -archs "$(dirname -- "$2")/$companion") == arm64 ]] || fail "First $companion must be arm64 only"
-    [[ $(lipo -archs "$(dirname -- "$3")/$companion") == x86_64 ]] || fail "Second $companion must be x86_64 only"
-done
 tmp=$(mktemp -d "${out%/*}/.herdr-assembly.XXXXXX")
 trap 'rm -rf -- "$tmp"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 app=$tmp/Sheprd.app
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-lipo -create "$2" "$3" -output "$app/Contents/MacOS/sheprd"
-for companion in "${companions[@]}"; do
-    lipo -create "$(dirname -- "$2")/$companion" "$(dirname -- "$3")/$companion" -output "$app/Contents/MacOS/$companion"
-done
 for executable in sheprd "${companions[@]}"; do
-    for arch in arm64 x86_64; do
-        lipo "$app/Contents/MacOS/$executable" -verify_arch "$arch"
+    inputs=()
+    for binary in "${binaries[@]}"; do
+        if [[ $executable == sheprd ]]; then
+            inputs+=("$binary")
+        else
+            inputs+=("$(dirname -- "$binary")/$executable")
+        fi
+    done
+    destination="$app/Contents/MacOS/$executable"
+    if [[ $2 == --x86_64 ]]; then
+        cp "${inputs[0]}" "$destination"
+    else
+        lipo -create "${inputs[@]}" -output "$destination"
+    fi
+    for arch in "${arches[@]}"; do
+        lipo "$destination" -verify_arch "$arch"
     done
     # Rust/linker outputs can contain ad-hoc signatures; distribution signing is separate.
     if codesign -d "$app/Contents/MacOS/$executable" 2>/dev/null; then
@@ -64,7 +82,7 @@ done
 plutil -replace CFBundleShortVersionString -string "$1" "$app/Contents/Info.plist"
 plutil -replace CFBundleVersion -string "$1" "$app/Contents/Info.plist"
 plutil -insert LSMinimumSystemVersion -string 14.2 "$app/Contents/Info.plist"
-plutil -lint "$app/Contents/Info.plist"
+plutil -lint "$app/Contents/Info.plist" >&2
 cp "$icns" "$app/Contents/Resources/Sheprd.icns"
 cp "$catalog" "$app/Contents/Resources/Assets.car"
 cp "$release_root/crates/sheprd-protocol/LICENSE-APACHE" "$app/Contents/Resources/"

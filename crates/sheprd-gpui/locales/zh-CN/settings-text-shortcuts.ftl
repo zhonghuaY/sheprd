@@ -1,0 +1,20 @@
+settings-text-shortcuts-section = 文本快捷短语
+settings-text-shortcuts-lead = 保存常用的提示词。在聊天中输入 / 或使用 + 旁边的快捷短语按钮：消息为空时会立即发送，否则会添加到正在编辑的内容中。每台计算机都会保存供所有设备使用的快捷短语，因此手机和所有已连接的计算机共享同一个列表。
+settings-text-shortcuts-add = 添加快捷短语
+settings-text-shortcuts-add-description = 经常发送的文本，例如让智能体继续工作。
+settings-text-shortcuts-add-button = 添加
+settings-text-shortcuts-full = 一个列表最多可包含 {$count} 个快捷短语。
+settings-text-shortcuts-list = 快捷短语
+settings-text-shortcuts-empty = 还没有快捷短语。
+settings-text-shortcuts-title = 标题
+settings-text-shortcuts-title-placeholder = 显示在菜单中；留空时显示文本的开头
+settings-text-shortcuts-text = 文本
+settings-text-shortcuts-text-placeholder = 发送给智能体的内容
+# $count is how many characters the text has; $limit is the most a shortcut keeps.
+settings-text-shortcuts-length = 已输入 { $count } / { $limit } 个字符
+settings-text-shortcuts-up = 上移
+settings-text-shortcuts-down = 下移
+settings-text-shortcuts-edit = 编辑
+settings-text-shortcuts-delete = 删除
+settings-text-shortcuts-cancel = 取消
+settings-text-shortcuts-save = 保存
